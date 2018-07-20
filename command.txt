@@ -4,5 +4,9 @@ git config --global user.email
 git add
 git rm --cached
 git commit -m
+git log --pretty=oneline
+git status
 git checkout
 git diff
+git reset --hard
+git reflog
