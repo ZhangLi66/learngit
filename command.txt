@@ -4,3 +4,5 @@ git config --global user.email
 git add
 git rm --cached
 git commit -m
+git checkout
+git diff
