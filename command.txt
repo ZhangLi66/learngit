@@ -6,7 +6,9 @@ git rm --cached
 git commit -m
 git log --pretty=oneline
 git status
-git checkout
+git checkout -- <file>
 git diff
 git reset --hard
+git reset HEAD <file>
 git reflog
+git rm
