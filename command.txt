@@ -12,3 +12,8 @@ git reset --hard
 git reset HEAD <file>
 git reflog
 git rm
+git branch
+git checkout
+git checkout -b
+git merge
+git branch -d
