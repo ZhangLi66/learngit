@@ -1,9 +1,9 @@
-git init
+git init    建立一个git仓库
 git config --global user.name
 git config --global user.email
-git add
+git add <file>
 git rm --cached
-git commit -m
+git commit -m <message>
 git log --graph --pretty=oneline
 git status
 git checkout -- <file>
