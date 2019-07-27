@@ -1,0 +1,274 @@
+
+$_
+    print的默认变量
+    foreach的默认控制变量
+
+///////////////////////
+    第2章
+///////////////////////
+
+perl -v
+    查看perl的版本
+
+数字表示方式：
+    在perl内部，总是按双精度浮点数的要求来保存数字并进行运算的
+    63
+    -46
+    36e8
+    12345678 = 1234_5678
+    1.25
+    255.00
+    7.25e5
+    -2.5e2
+    -3.5e-8
+    -1.3E-4
+
+    0377 八进制数，等于十进制的255
+    0xff 十六进制数，等于十进制的255
+    0b1111_1111 二进制数，等于十进制的255
+
+    2+3
+    5.1-3.4
+    3*5
+    14/2.3
+    10%3    取模
+    2**8    乘方
+
+单引号内的所有字符都代表他们自己，除了单引号和反斜线外
+    \' 表示单引号
+    \\ 表示反斜线
+
+字符串操作符
+    . 连接操作符
+        "hello"."world"     = "helloworld"
+        "hello".' '."world" = "hello world"
+        'hello world'."\n"  = "hello world\n"
+
+    x 重复操作符
+        "fred"x3 = "fredfredfred"
+        5x4      = "5555"
+
+use diagnostics
+    编译报告更为详尽的问题描述
+
+${what}s
+    可以用花括号把变量名括起来，避免歧义
+
+$omega = chr(0x03C9)
+    把代码点转换成字符
+
+    或直接在双引号内用\x{}
+        "\x{03B1}\x{033C9}"
+
+$code_point = ord('?')
+    把字符转换成代码点
+
+比较操作符
+    比较        数字    字符串
+    相等        ==      eq
+    不等        !=      ne
+    小于        <       lt
+    大于        >       gt
+    小于或等于  <=      le
+    大于或等于  >=      ge
+
+if控制结构
+    if () {
+
+    }
+
+    if () {
+
+    }else{
+
+    }
+
+    在判断时
+        如果是数字，0为假，所有其他数字都为真
+        如果是字符串，空字符串（''）为假，其他所有字符串为真
+        如果既不是数字也不是字符串，那就先转化成数字或字符串在进行判断
+        '0'是唯一被当成假的空字符串，'0'跟数字0是同一个标量
+
+<STDIN>
+    从标准输入读取一行文本，直到换行符为止
+
+chomp
+    去掉字符串末尾的一个换行符,返回值是实际移除的字符个数
+
+while控制结构
+    while () {
+
+    }
+
+undef值
+    变量的初始值是特殊的undef
+    当成数字使用，表现是0
+    当成字符串使用，表现是空字符串（''）
+
+defined函数
+    要判断某个字符串是undef而不是空字符串，可以使用defined函数
+    如果是undef，该函数返回假，否则返回真
+
+    应用：
+        行输入操作符<STDIN>有时候会返回undef。在一般情况下他会返回一行文本，
+        但若没有更多输入，比如读到文件结尾(end-of-file)时，他就会返回undef。
+
+        $madonna = <STDIN>;
+        if(defined($madonna)) {
+            print "The input was $madonna";
+        } else {
+            print "No input available!\n";
+        }
+
+$madonna = undef;
+    创建undef值
+
+
+
+
+
+
+///////////////////////
+    第3章
+///////////////////////
+
+$fred[0] = "zhang";
+$fred[1] = "li";
+    数组元素
+
+有数组rocks，它的最后一个元素的索引值是$#rocks,这个数值比数组元素的个数少1，因为还有一个编号0的元素
+$rocks[-1]  数组的最后一个元素
+$rocks[-2]  数组的倒数第二个元素
+
+列表直接量
+    (1,2,3)
+    ("fred",4.5)
+    (1..100)    100个整数构成的列表
+    (5..1)  空列表，..只能向上计数
+    ("fred","barney","betty")
+    qw(fred barney betty) = qw# fred barney berry #
+        在qw构建的列表中，不能像双引号内的字符串一样使用\n或$fred
+        perl会将其当成单引号内的字符串来处理，并忽略空白符（如空格，制表符，换行符）
+        允许其他的定界符
+    qw(
+        fred
+        barney
+        betty
+    )
+
+列表的赋值
+    ($fred,$barney,$dino) = ("stone","rubble",undef)
+    ($fred,$barney) = ($barney,$fred)   交换两个变量的值
+    @rock = qw/ bed slate lava /
+    @copy = @quarry
+
+pop操作符
+    它负责取出数组中最后一个元素并将其作为返回值返回
+
+    @array = 5..9;
+    $fred = pop(@array); #$fred变成9，@array现在是(5,6,7,8)
+    pop @array; #删除数组最后一个元素
+
+push操作符
+    添加一个元素到数组末端
+
+    push(@array,0); #@array现在是(5,6,7,0)
+    @other = qw/ 2 3 /
+    pop @array,@other;  #@array现在是(5,6,7,0,2,3)
+    pop @array,1..5;
+
+shift、unshift操作符
+    对数组的开头进行处理
+
+    @array = qw/ 4 5 /
+    $m = shift(@array);  #@array变成(5)
+    unshift @array,1..3;    #@array变成(1,2,3,5)
+
+splice操作符
+    可以对数组的中间元素进行操作
+
+    第一个参数是目标数组
+    第二个参数是数组元素的起始位置
+        只给两个参数时，把从开始一直到末尾的元素全部取出来并返回
+
+    第三个参数是要操作的长度，不是结束位置
+        只给三个参数时，删除一个数组片段
+
+    第四个参数是要替换的列表
+
+    如果把第三个参数设置为0，那么会在起始位置之前添加列表
+
+foreach控制结构
+    foreach $element (qw/ li zhag/) {
+
+    }
+
+    控制变量并不是列表元素的复制品，他就是列表元素本身
+    如果循环中修改了控制变量的值，也就同时修改了这个列表元素
+
+    foreach $rock (@rocks) {
+        $rock = "\t$rock";
+        $rock .= "\n";
+    }
+        在@rocks的每一个元素前加上制表符，同时在末尾加上换行符
+
+    循环结束后，控制变量任然是循环前的值，所以不用担心之前用过同名的变量
+
+reverse操作符
+    读取列表的值(也可能来自数组)，并按相反的次序返回该列表
+
+    @wilma = reverse 1..5; #可以弥补..只能递增的不足
+
+    reverse @wilma; #错误用法
+    @wilma = reverse @wilma; #正确
+        reverse返回相反的列表，但是并不会修改传进来的参数
+
+sort操作符
+    对列表按照Unicode进行排序,并返回列表
+
+    @number = sort 97..102; #得100,101,102,97,98,99
+        以1开头的字符串会排在以9开头的字符串的前面
+
+    sort @rock；#错误用法
+    @rock = sort @rock；#正确
+
+each操作符
+    从Perl 5.12开始，可以对数组使用each操作符。
+
+    use 5.012;
+    while(my($index,$value) = each @rocks) {
+        say "$index；$value";
+    }
+
+    foreach $index (0..$#rocks) {
+        print "$index:$rocks[$index]\n";
+    }
+
+sort在标量上下文中返回undef
+reverse在标量上下文中返回逆序后的字符串
+    $line = reverse qw/ yabba dabba doo /; #得到oodabbadabbay
+
+@wilma = undef; #得到一个仅有一个元素的列表
+@betty = (); #清空数组的办法
+
+强制指定标量上下文 scalar
+    print "I have",scalar @rocks," rocks\n";
+
+@line = <STDIN>;
+    若果输入是文件，会读取所有行，每一行是一个列表元素
+    如果输入来自键盘，可以用control+d表示输入结束
+
+chomp(@line = <STDIN>);
+    会去掉每一个元素的换行符
+
+
+///////////////////////
+    第4章
+///////////////////////
+
+
+
+
+
+
+
