@@ -1,0 +1,50 @@
+cat
+    cat file1 file2 把文件内容拼接在一起，发送到stdout
+    echo "lzhang" | cat - file1 将stdin和文件内容拼接在一起，输出到stdout，-被作为stdin的文件名
+    cat -s file 压缩相邻的空白行
+    cat -T file 将制表符显示为^I，对Python很有用
+    cat -n file 给每一行加上行号
+
+find
+    -print 使用\n（换行符）分隔输出的每个文件或目录名
+    -print0 使用空字符'\0'来分隔
+    -name 根据文件名或正则表达式进行搜索，-iname忽略大小写
+    find . \( -name "*.txt" -o -name "*.pdf" \) -print -o或-or执行逻辑或（or）操作，-a或-and执行逻辑与（and）操作
+    -path 限制匹配文件的路径及名称
+    -regex 基于正则表达式来匹配，-iregex忽略大小写
+    find . ! -name "*.txt" -print 匹配不以.txt结尾的文件
+    -maxdepth -mindepth 限制搜索目录的深度
+    -type 指定文件类型
+        f   普通文件
+        l   符号连接
+        d   目录
+        c   字符设备
+        b   块设备
+        s   套接字
+        p   FIFO
+    -atime -mtime -ctime 访问时间，修改时间，变化时间，单位为天
+        find . -type f -atime -7 -print 打印出最近7天内被访问过的文件
+        find . -type f -atime 7 -print  打印出刚好在7天前被访问过的文件
+        find . -type f -atime +7 -print 打印出访问时间超过7天的文件
+    -amin -mmin -cmin 单位为分钟
+    find . -type f -newer file.txt -print 打印出比file.txt修改时间更近的文件
+    -size 根据文件大小进行搜索
+        find . -type f -size +2k -print 找出大于2KB的文件
+        find . -type f -size 2k -print 找出等于2KB的文件
+        find . -type f -size -2k -print 找出小于2KB的文件
+            b   块（512字节）
+            c   字节
+            w   字（2字节）
+            k   千字节（1024字节）
+            M   兆字节（1024K字节）
+            G   吉字节（1024M字节）
+    -perm 查找特定权限的文件
+        find . -type f -perm 644 -print 找出权限为644的文件
+    find . -type f -user lzhang -print 打印出lzhang拥有的所有文件
+    find . -type f -name "*.swp" -delete 删除所匹配到的文件
+    -exec 对每一个匹配项执行单个命令，{}替换成相应的文件名
+        find . -type f -user root -exec chown lzhang {} \; 把root拥有的文件改为拥有者为lzhang
+    find . -name '.git' -prune -o -type f -print 把.git目录排除在外
+
+xargs
+

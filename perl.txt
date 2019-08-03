@@ -94,6 +94,15 @@ if控制结构
 
     }
 
+    if () {
+
+    }elsif () {
+
+    }else {
+
+    }
+
+
     在判断时
         如果是数字，0为假，所有其他数字都为真
         如果是字符串，空字符串（''）为假，其他所有字符串为真
@@ -314,6 +323,384 @@ my不加括号时，只能用来声明单个词法变量
 ///////////////////////
     第5章
 ///////////////////////
+
+读取标准输入
+    当读到文件结尾时,返回undef
+        while (defined($line = <STDIN>)) (
+            print "I saw $line";
+        )
+
+        while (<STDIN>)) (
+            print "I saw $_";
+        )
+
+        foreach (<STDIN>) {
+            print "I saw $_";
+        }
+
+钻石操作符 <>
+    ./my_program fred - betty
+        while (<>) {
+            chomp;
+            print "It was $_ that I saw!\n";
+        }
+        会先处理文件fred,然后处理标准输入，最后处理文件betty
+
+调用参数 @ARGV
+    命令行参数会存放在数组@ARGV，钻石操作符<>会去检查这个数组,
+    然后决定用那些文件，如果是空列表，就会改用标准输入流
+
+输出到标准输出
+    @array = qw(fred barney betty);
+    print @array; #输出：fredbarneybetty
+    print "@array"; #输出：fred barney betty
+
+    print <>; #相当于cat
+    print sort <>; #相当于sort
+
+    print (2+3)*5;
+        Perl会先输出5，print的返回值是1，乘以4后，丢掉这个乘积,
+        它等于：(print(2+3))*4
+
+用printf格式化输出
+    %%  a percent sign
+    %c  a character with the given number
+    %s  a string
+    %d  a signed integer,in decimal
+    %u  an unsigned integer,in decimal
+    %o  an unsigned integer,in octal
+    %x  an unsigned integer,in hexadecimal
+    %e  a floating-point number,in scientific notation
+    %f  a floating-point number,in fixed decimal notation
+    %g  a floating-point number,in %e or %f notation
+
+printf "The items are:\n".("%10s"x@array),@array;
+
+Perl保留的6个特殊的文件句柄名：STDIN STDOUT STDERR DATA ARGV ARGVOUT
+
+打开文件句柄
+    open CONFIG,'<','dino';
+    open CONFIG,'<:encoding(UTF-8)','dino'; # 可指定编码
+    open BEDROCK,'>',$file_name;
+    open BEDROCK,'>>:encoding(UTF-8)',$file_name;
+
+关闭文件句柄
+    close CONFIG;
+
+用dei处理致命错误
+    if(! open LOG,'>>',"logfile") {
+        die "Cannot create logfile: $!";
+    }
+        $!代表刻度的系统错误信息,只有在系统请求失败后的瞬间，$!的值才会有用
+
+    if(@ARGV < 2) {
+        die "Not enough argument\n";
+    }
+        die函数中的错误信息尾端加上换行符，就不会显示行号和文件名
+
+用warn送出警告信息
+    warn函数用法和die相同，它将信息送到标准错误流，但是他不会终止程序的运行
+
+自动检测致命错误
+    use autodie；
+        从Perl 5.10开始支持，如果系统调用部分出错，autodie会自动帮助调用die
+
+使用文件句柄
+    if(! open PASSWD,"/etc/passwd") {
+        die "How did you get logged in? ($!)";
+    }
+    while(<PASSWD>) {
+        chomp;
+        ...
+    }
+
+    if(! open LOG,'>>',"logfile") {
+        die "Cannot create logfile: $!";
+    }
+    print LOG "Captain's log,stardate 3.14159\n";
+    printf STDERR "%d percent complete.\n",$done/$total*100;
+    printf STDERR ("%d percent complete.\n",$done/$total*100);
+
+改变默认的文件输出句柄
+    默认情况下，print、printf的输出会送到STDOUT
+    可以用select操作符来改变默认的文件句柄
+
+        select BEDROCK；
+        print "I hope Mr.Slate doesn't find out about this.\n";
+        print "Wilma!\n";
+            把默认的文件句柄改成了BEDROCK
+
+    一旦选择了输出用的默认文件句柄，程序会一直往那里输出
+    默认文件句柄使用完之后，最好把它设回原先的默认值STDOUT
+
+    将数据输出到文件句柄时，默认情况下都会经过缓冲处理,只要将特殊变量$|设置为1
+    就会使当前的默认文件句柄在每次进行输出操作后立刻刷新缓冲区
+        select LOG;
+        $| = 1; #不要将LOG的内容保留在缓冲区
+        select STDOUT；
+        print LOG "This gets written to the LOG at once!\n";
+
+    如果重新打开某个同名的文件句柄，Perl会自动帮你关闭原来那个
+
+    错误信息送到文件里
+        if(! open STDERR,'>>',"/home/barney/.error_log") {
+            die "Can't open error log for append: $!";
+        }
+
+用say来输出
+    从Perl 5.10开始，支持say函数，它和print差不多，单在打印每行内容时会自动加上换行符
+        use 5.010;
+        print "Hello!\n";
+        print "Hello!","\n";
+        say "Hello!";
+
+标量变量中的文件句柄
+    my $rock_fh;
+    open $rock_fh,'<',"rock.txt" or die "Could not open rock.txt: $!";
+    open my $rock_fh,'<',"rock.txt" or die "Could not open rock.txt: $!";
+    while(<$rock_fh>) {
+        chomp;
+        ...
+    }
+
+    open my $rocks_fh,'>>',"rocks.txt" or die "Could not open rocks.txt: $!";
+    foreach my $rock (qw(slate lava)) {
+        say $rocks_fh $rock;
+    }
+    print $rocks_fh "limestone\n";
+
+    print STDOUT;
+    print $rock_fh; #错误，Perl不知道这里是否为文件句柄
+    print {$rock_fh}; #默认打印$_中的内容
+
+
+
+
+///////////////////////
+    第6章 哈希
+///////////////////////
+
+
+访问哈希元素
+    $family_name{'fred'} = 'flintstone';
+    $family_name{'barney'} = 'rubble';
+
+访问整个哈希
+    对哈希赋值可以使用列表，列表中的元素应该为键-值对
+        %some_hash = ('foo',35,'bar',12.4,2.5,'helo');
+
+    在列表上下文中，哈希的值是简单的键-值对列表
+        @any_array = %some_hash；
+
+哈希赋值
+    my %new_hash = %old_hash;
+    my %inverse_hash = reverse %any_hash;
+        最好在确定元哈希值是唯一的情况下使用
+
+胖箭头 =>
+    => 它是逗号的另一种写法，在任何需要逗号的地方都可以用=>代替
+        my %last_name = (
+            'fred' => 'flintstone',
+            'dino' => undef,
+            'barney' => 'rubble',
+        );
+
+    使用=>的时候可以省略键的引号，左边的部分会被自动引起
+        my %last_name = (
+            fred => 'flintstone',
+            dino => undef,
+            barney => 'rubble',
+        );
+
+    如果键是裸字的话，可以省略花括号中的引号
+        $score{'fred'} 简写为 $score{fred}
+        $hash{bar.foo} = 1; #构成键名'barfoo'
+
+哈希函数
+    keys和values函数
+        keys函数能返回哈希的键列表，而values函数能返回对应的值列表
+        如果哈希没有任何成员，则两个函数都返回空列表
+
+        my %hash = ('a' => 1, 'b' => 2, 'c' => 3);
+        my @K = keys $hash;
+        my @v = values %hash;
+
+        在标量上下文中，这两个函数都会返回哈希中元素(键-值对)的个数
+        my $count = keys %hash; #得到3
+
+        if(%hash) {
+            print "That was a true value!\n";
+        }
+            只要哈希中至少有一个键-值对，就会返回真
+
+    each函数
+        while (($key,$value) = each %hash) {
+            print "$key => $value\n";
+        }
+
+        foreach $key (sort keys %hash) {
+            $value = $hash{$key};
+            print "$key => $value\n";
+        }
+
+    exists函数
+        检查哈希中是否存在某个键,和键对应的值没有关系
+        if(exists $books{'dino'}) {
+            print "Hey,there's a library card for dino!\n";
+        }
+
+    delete函数
+        可以从哈希中删除指定的键及其对应的值
+        若果没有这样的键，它就会直接结束，而不会出现任何警告或错误信息
+            delete $books{'betty'};
+
+%ENV哈希
+    %ENV保存当前环境变量
+        print "PATH is $ENV{PATH}\n";
+
+
+
+
+
+
+
+
+
+
+///////////////////////
+    第7章 漫游正则表达式王国
+///////////////////////
+
+
+使用简单模式
+    $_ = "yabba dabba doo";
+    if(/abba/) {
+        print "It matched!\n";
+    }
+
+Unicode属性
+    匹配带有空白符属性的字符
+        if(/\p{Space}/) { #总共有26个不同的字符带此属性
+            print "The string has some whitespace.\n";
+        }
+
+    匹配带有数字属性的字符
+        if(/\p{Digit}/) { #总共有411个不同的数字字符
+            print "The string has a digit.\n";
+        }
+
+    匹配十六进制数字的字符集合[0-9A-Fa-f]
+        if(/\p{Hex}\P{Hex}/) { #匹配连续两个十六进制数
+            print "The string has a pair of hex digits.\n";
+        }
+
+    匹配不包含特定属性的字符，只要把小写的p改成大写的P，就表示否定意义
+        if(/\P{Space}/) { #只要不是空白符都能匹配
+            print "The string has one or more non-whitespace characters.\n";
+        }
+
+关于元字符
+    . 匹配任意一个字符的通配符，换行符(\n)除外
+        如果要匹配.自身，则在前面加上反斜线: \.
+        如果要匹配\自身，则用两个反斜线: \\
+
+简单的量词
+    * 匹配前面的条目零次或多次
+        .* 匹配除换行符意外的任意字符零次或多次
+    + 匹配前面的条目一次以上
+    ? 匹配前面的条目零次或多次
+
+模式分组 ()
+    /(fred)+/ 会匹配像fredfredfred这样的字符串
+    /(.)\1/     匹配连续两个相同的字符
+
+    从Perl 5.10开始，支持\g{N}的写法来反向引用,N可以为负数，表示相对位置
+        use 5.010;
+        $_ = "aa11bb";
+        if(/(.)\g{1}11/) {
+            print "It matched!\n";
+        }
+
+        if(/(.)\g{-1}11/) {
+            print "It matched!\n";
+        }
+
+择一匹配 |
+    /fred|barney|betty/ 能匹配任何含有fred或barney或betty的字符串
+
+字符集 []
+    [abcwxyz]   匹配这7个字符中的任意一个
+    [a-cw-z]    和上面一样
+    [^def]      匹配这三个字符以外的任何字符
+    [^n\-z]     匹配n - z以外的任何字符
+
+字符集简写
+    \d  表示任意一个数字的字符集
+        Perl 5.14开始，当需要严格按照ASCII的范围来匹配数字字符时，可以选用修饰符/a
+        use 5.014;
+        if(/HAL-[\d]+/a) # 按老的ASCII字符语义解释
+
+    \s  表示匹配任意空白符,效果上大抵等同于\p{Space}
+        Perl 5.10还增加了范围更小的空白符集
+        \h  匹配水平空白符
+        \v  匹配垂直空白符
+            \h和\v并起来，就成了\p{Space}
+
+    \R  Perl 5.10中还引入，匹配任意一种断行符，不管是什么操作系统
+        \R总会匹配表示断行的那个字符，不管是\r\n还是\n
+
+    \w  ASCII语义下相当于[a-zA-Z0-9_],数字、字母加下划线
+
+反义简写
+    \D \W \S    匹配相应小写版本范围以外的字符
+
+    [\d\D]  匹配任意字符，包括换行符而"."只能匹配换行符以外的所有字符
+
+
+
+
+
+
+
+
+
+
+///////////////////////
+    第8章 用正则表达式进行匹配
+///////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+///////////////////////
+    第9章
+///////////////////////
+
+
+
+
+
+
+
+
+
+
+
 
 
 
