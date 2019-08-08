@@ -387,7 +387,7 @@ Perl保留的6个特殊的文件句柄名：STDIN STDOUT STDERR DATA ARGV ARGVOU
 关闭文件句柄
     close CONFIG;
 
-用dei处理致命错误
+用die处理致命错误
     if(! open LOG,'>>',"logfile") {
         die "Cannot create logfile: $!";
     }
@@ -793,8 +793,274 @@ Unicode属性
 
 
 ///////////////////////
-    第9章
+    第9章 用正则表达式处理文本
 ///////////////////////
+
+
+用s///进行替换
+    $_ = "He's out bowling with Barney tonight.";
+    s/Barnet/Fred/;
+    print "$_\n";
+
+    s///返回的是布尔值，替换成功时为真，否则为假
+    s///默认只会进行一次替换
+
+
+    用/g进行全局替换
+        $_ = "home, sweet home!";
+        s/home/cave/g;
+        print "$_\n"; #打印"cave, sweet cave!"
+
+        缩减空白
+            s/\s+/ /g;
+
+        将开头的空白替换成空字符串
+            s/^\s+//;
+
+        将结尾的空白替换成空字符串
+            s/\s+$//;
+
+        s/^\s+|\s+$//g
+
+    不同的定界符
+        想m//和qw//一样，s///也可以用其他定界符
+            s#^https://#http://#
+            s{fred}{barney}
+            s[fred]{bayney}
+            s<fred>#barney#
+
+    无损替换
+        Perl 5.14 增加了/r修饰符，原先s///操作完成后返回的是成功替换的次数，加上/r之后
+        就会保留原来字符串变量中的值不变，而把替换结果作为替换操作的返回值返回
+
+        my $original = 'Fred ate 1 rib';
+        my $copy = $original;
+        $copy =~ s/\d+ ribs?/10 ribs/;
+
+        use 5.014;
+        my $copy = $origin =~ s/\d+ ribs?/10 ribs/r;
+            和上面效果是一样的
+
+    大小写转换
+        \U  会将其后的所有字符转换成大写的
+            $_ = "I saw Barney with Fred.";
+            s/(fred|barney)/\U$1/gi; # 替换后$_变成"I saw BARNEY with FRED."
+
+        \L 会将它后面的所有字符转换成小写的
+            s/(fred|barney)/\L$1/gi; # 替换后$_变成"I saw barney with fred."
+
+    默认情况下，\U \L会影响之后全部的字符串
+    可以使用\E关闭大小写转换的功能
+            s/(\w+) with (\w+)/\U$2\E with $1/i
+
+    \l \u只会影响紧跟其后的第一个字符
+        s/(fred|barney)/\u$1/ig; #
+
+split操作符
+    my @fields = split /separator/,$string;
+
+    my @fields = split /:/,"adc:def:g:h"; # 得到("abc","def","g","h")
+
+    如果两个分隔符连在一起，就会产生空字段
+    但是Perl会保留开头处的空字段，舍弃结尾处的空字段
+    my @fields = split /:/,"::a:b::c::"; # 得到("","","a","b","","c")
+
+    my @args = split /\s+/,$some_input;
+        把连续的空白符当做分隔字段
+
+    默认split会以空白符分隔$_
+    my @fields = split; # 等效于 split /\s+/,$_;
+
+join函数
+    my $result = join $glue,@pieces;
+
+列表上下文中的m//
+    在列表上下文中使用模式匹配操作符(m//)时，如果模式匹配成功
+    那么返回的是所有捕获变量的列表；如果匹配失败，则会返回空列表
+
+    $_ = "Hello there, neighbor!";
+    my ($first,$second,$third) = /(\S+) (\S+), (\S+)/;
+
+    my $text = "Fred dropped a 5 ton granite block on Mr.Slate";
+    my @words = ($text =~ /([a-z]+)/ig;
+
+    my %last_name = ($data =~ /(\w+)\s+(\w+)/g);
+        返回一对被捕获的值，而这一对值正好为哈希的键-值对
+
+非贪婪量词
+    * + ? {3,} 都是贪婪量词，在保证整体匹配的前提下，他们会尽量匹配长字符串
+    *? +? ?? {3,}? 是非贪婪量词，匹配尽可能短的字符串
+
+跨行的模式匹配
+    ^ $加上/m修饰符后，可以匹配行首和行尾
+
+    open FILE,$filename or die "Can't open '$filename': $!";
+    my $line = join ' ',<FILE>;
+    $line =~ s/^/$filename: /gm;
+
+一次更新多个文件
+    $^I = ".bak";
+    while (<>) {
+        s/^Date:.*/Date: $date/;
+    }
+
+从命令行直接编辑
+    perl -p -i.bak -w -e 's/Randall/Randal/g' fred*.dat
+
+    #!/usr/bin/perl -w
+    $^I = ".bak";
+    while(<>) {
+        s/Randall/Randal/g
+        print;
+    }
+    上面两段程序效果相同
+
+
+
+
+
+
+
+///////////////////////
+    第10章 其他控制结构
+///////////////////////
+
+
+unless 控制结构
+    在if结构中，只条件表达式为真时，才执行某块代码
+    在unless结构中，当条件表达式为假时，才执行
+
+    unless ($fred =~ /\A[A-Z_]\w*\z/i) {
+        print "The value of \$fred doesn't look like a perl identifier name.\n";
+    }
+
+    unless () {
+
+    } else {
+
+    }
+
+until 控制结构
+    在while机构中，条件为真执行，为假不执行
+    在until结构中，条件为假执行，为真不执行
+
+    until($j > $i) {
+        $j *= 2;
+    }
+
+表达式的修饰符
+    print "$n is a negative number.\n" if $n < 0;
+    &error("Invalid input") unless &valid($input);
+    $i *= 2 until $i > $j;
+    print " ",($n += 2) while $n < 10;
+    &greet($_) foreach @person;
+        在使用佛reach的时候，不能自选变量，只能使用$_
+
+自增或自减
+    my @people = qw/fred barney fred wilma dino barney fred pebbles/;
+    my %count;
+    $count{$_}++ foreach @people;
+
+for控制结构
+    for($i=1;$i<=10;$i++) {
+        print "I can count to $i\n";
+    }
+
+
+循环控制
+
+    last操作符
+        last操作符能立即中止循环的执行
+        while (<STDIN>) {
+            if(/_END_/) {
+                last;
+            } else {
+                print;
+            }
+        }
+
+        在Perl中有5种循环 for foreach while until以及裸块(用花括号{}括起来的代码块)
+
+    next操作符
+        结束当前这次循环迭代，继续执行循环的下一次迭代
+        while(<>) {
+            foreach (split) {
+                $total++;
+                next if /\W/;
+                $valid++;
+                $count{$_}++;
+            }
+        }
+        print "total things = $total, valid words = $valid\n";
+        foreach $word (sort keys %count) {
+            print "$word was seen $count{word} times.\n";
+        }
+
+    redo操作符
+        它能将控制返回到当前循环块的顶端
+        而不经过任何测试条件， 也不会进入下一次循环迭代
+
+        my $words = qw/ fred barney pebbles dino wilma betty/;
+        my $error = 0;
+        foreach (@words) {
+            print "Type the word '$_': ";
+            chomp(my $try = <STDIN>);
+            if($try ne $_) {
+                print "Sorry - That's not right.\n\n";
+                $error++;
+                redo;
+            }
+        }
+        print "You'v completed the test, whith $error errors.\n";
+
+带标签的块
+    标签应该用来命名整块代码，而不是用来标明程序中的某个具体位置
+
+    LINE: while(<>) {
+        foreach (split) {
+            last LINE if /_END_/; # 跳出标签为LINE的循环
+        }
+    }
+
+条件操作符 ?:
+    expression ? if_true_expr : if_false_expr
+
+    my $location = &is_weekend($day) ? "home" : "work";
+    my $average  = $n ? ($total/$n) : "-----";
+
+逻辑操作符
+    and && or ||
+
+    if($dessert{'cake'} && $dessert{'ice_cream'})
+    if($dessert{'cake'} || $dessert{'ice_cream'})
+
+    if(($n != 0) && ($total/$n < 5))
+
+短路操作符的值
+    短路操作符的值不是简单的布尔值，而是最后运算的那部分表达式的值
+
+    my $last_name = $lastname{$someone} || '(No last name)';
+        当左边是一个逻辑假值时，会出现问题
+
+    my $last_name = defined $last_name{$someone} ? $lastname{$someone} : '(No last name)';
+
+定义或操作符 //
+    Perl 5.10引入了定义或操作符
+    在发现左边的值属于已定义时进行短路操作，而不管该是属于逻辑真还是逻辑假
+
+    use 5.010；
+    my $last_name = $lastname{$someone} // '(No last name)';
+
+
+
+
+
+
+
+///////////////////////
+    第11章
+///////////////////////
+
 
 
 
