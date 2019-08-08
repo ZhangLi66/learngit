@@ -1058,11 +1058,55 @@ for控制结构
 
 
 ///////////////////////
-    第11章
+    第11章 Perl 模块
 ///////////////////////
 
+File::Basename 模块
+    use File::Basename;
+    my $name = "/usr/local/bin/perl";
+    my $basename = basename $name;
+
+    dirname
+
+    仅选用模块中的部分函数
+        use File::Basename qw/ basename /;
+
+        use File::Basename (); #不导入任何函数，在使用时用全名调用函数
+        my $dirname = File::Basename::dirname $name;
+
+File:Spec模块
+    File::Spec 是面向对象的，必须通过File::Spec的全名方式来调用方法
+
+    use File::Spec;
+    my $new_name = File::Spec->catfile($dirname,$basename);
+    rename($old_name,$new_name) or warn "Can't rename";
+
+Path::Class模块 Perl自带的模块
+    my $dir = dir(qw/ users fred lib /);
+    my $subdir = $dir ->subdir("perl5"); # user/fred/lib/perl5
+    my $parent = $dir ->parent; # user/fred
+
+    my $windir = $dir ->as_foreign('Win32'); # user\fred\lib
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+///////////////////////
+    第12章
+///////////////////////
 
 
 
