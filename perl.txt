@@ -1097,6 +1097,106 @@ Path::Class模块 Perl自带的模块
 
 
 
+///////////////////////
+    第12章  文件测试
+///////////////////////
+
+
+文件测试操作符
+    文件测试操作符  意义
+    -r              文件或目录，对目前用户或组来说是可读的
+    -w              文件或目录，对目前用户或组来说是可写的
+    -x              文件或目录，对目前用户或组来说是可执行的
+    -o              文件或目录，由目前用户拥有
+    -R              文件或目录，对实际的用户或组来说是可读的
+    -W              文件或目录，对实际的用户或组来说是可写的
+    -X              文件或目录，对实际的用户或组来说是可执行的
+    -O              文件或目录，由实际的用户拥有
+    -e              文件或目录，是存在的
+    -z              文件存在而且没有内容(对目录来说永远是假)
+    -s              文件或目录存在而且有内容(返回值是以字节为单位的文件大小)
+    -f              是普通文件
+    -d              是目录
+    -l              是符号链接
+    -S              是socket类型的文件
+    -p              是命名管道，也就是先入先出(fifo)队列
+    -b              是块设备文件(比如某个可挂载的磁盘)
+    -c              是字符设备文件(比如某个I/O设备)
+    -u              文件或目录设置了setuid位
+    -g              文件或目录设置了setgid位
+    -k              文件或目录设置了sticky位
+    -t              文件句柄是TTY设备(类似系统函数isatty()的测试，不能对文件名进行次测试)
+    -T              看起来像文本文件
+    -B              看起来像二进制文件
+    -M              最后一次被修改后至今的天数
+    -A              最后一次被访问后至今的天数
+    -C              最后一次文件节点编号(inode)被变更后至今的天数
+
+        my $size_in_k = (-s) / 1024;
+
+测试同一文件的多项属性
+    if(-r $file and -w $file)
+        非常耗费资源的操作
+
+    if(-r $file and -w _)
+        虚拟文件句柄 _ 用上次查询过的文件信息来做当前测试
+
+    if(-r $file) {
+
+    }
+    if(-w _) {
+
+    }
+
+栈式文件测试操作符
+    Perl 5.10之后支持
+
+    use 5.010;
+    if(-w -r $file)
+        靠近文件名的测试会先执行
+
+    if(-s -d $file <512) = if((-d $file and -s _) < 512)
+        这种用法可能与使用初衷不符
+    if(-d $file and -s _ < 512)
+
+stat和lstat函数
+    stat的参数可以是文件句柄(包括虚拟文件句柄_)或是某个返回文件名的表达式
+
+    my($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,$ctime,$blksize,$blocks) = stat($filename);
+
+    对符号连接名调用stat函数将会返回符号链接指向对象的信息
+    而非符号链接本身的信息
+    若需要符号链接本身的信息，可以使用lstat函数
+
+localtime函数
+    my $timestamp = 1180630098;
+    my $date - localtime $timestamp;
+
+    在列表上下文中，localtime会返回一个数字元素组成的列表
+    my($sec,$min,$hour,$day,$mon,$year,$wday,$yday,$isday) = localtime $timestamp;
+
+    gmtime它返回的是世界标准时间
+    my $now = gmtime;
+
+按位运算操作符
+    表达式      意义
+    10 & 12     按位与--哪些位在两边同时为真
+    10 | 12     按位或--哪些位在任一边为真
+    10 ^ 12     按位异或--哪些位在任意一边为真，但不能两边都为真
+    6 << 2      按位左移，将左边的操作数向左边移动位数，移动位数由右边的操作数指定
+                并以0来填补最低有效位
+    25 >> 2     按位右移，将左边的操作数向右边移动位数，移动位数由右边的操作数指定
+                并丢弃移出的最低有效位
+    ~10         按位取反，也称为去反码--返回操作数逐位取反之后的数值
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1105,11 +1205,133 @@ Path::Class模块 Perl自带的模块
 
 
 ///////////////////////
-    第12章
+    第13章 目录操作
 ///////////////////////
 
+在目录树中移动
+    chdir '/etc' or die "cannot chdir to /etc: $!";
+        改变当前工作目录
+
+文件名通配
+    my @all_files = glob '*';
+        取得当前目录中的所有文件并按字母排序，单不包括以点号开头的文件
+        这个shell中的做法完全相同
+
+    my @pm_files = glob '*.pm';
+        取得以.pm结尾的文件
+
+    my $all_filse_including_dot = glob '.* *';
+        取得所有文件名，包括点号开头的文件
+        如过要匹配多种模式，可以在参数中用空格隔开
+
+文件名通配的另一种语法
+    my $all_files = <*> = my $all_files = glob '*';
+
+    my $dir = '/etc';
+    my $dir_files = <$dir/* $dir/.*>;
+
+    my @files = <FRED/*>; # 文件名通配操作
+    my @lines = <FRED>;   # 从文件句柄读取
+    my @lines = <$fred>;  # 从文件句柄读取
+    my @files = <$fred/*>;# 文件名通配操作
+
+    my $name = 'FRED';
+    my @lines = readline FRED;  #从FRED读取
+    my @lines = readline $fred; #从FRED读取
+
+目录句柄
+    my $dir_to_process = '/etc';
+    opendir my $dh,$dir_to_process or die "Cannot open $dir_to_process: $!";
+    foreach $file (readdir $dh) {
+        print "one file in $dir_to_process is $file\n";
+    }
+    closedir $dh;
+
+    目录句柄返回的名称列表并未按照任何特定的顺序排列
+    列表里包含所有的文件，包括以点号开头的文件，.和..也在其中
+
+文件和目录的操作
+    删除文件
+        unlink ‘salte','bedrock','lava';
+        unlink qw(slate bedrock lava);
+        unlink glob '*.o';
+            unlink的返回值是成功删除的文件数目
+            unlink不能用来删除目录，这同不带参数的rm命令不能删除目录一样
+
+    重命名文件
+        rename 'old','new';
+
+        rename 'over_there/some/place/some_file','some_file';
+        rename 'over_there/some/place/some_file' => 'some_file';
+
+        foreach my $file (glob "*.old") {
+            my $newfile= $file;
+            $newfile =~ s/\.old$/.new/;
+            if(-e $newfile) {
+                warn "Can't rename";
+            } elsif (rename $file,$newfile) {
+
+            } else{
+                warn "rename failed";
+            }
+        }
+
+    链接与文件
+        link 'chichen',egg or warn "Can't link";
+            建立硬链接
+
+        symlink 'dodgson','carroll' or wayn "Can't synlink";
+            建立符号链接
+
+        my $where = readlink 'carroll';
+            取得符号链接指向的位置
+
+    创建和删除目录
+        mkdir 'fred',0755 or die "Can't make fred";
+            0755是八进制数
+        mkdir $name,oct($perm);
+
+        rmdir
+            只能移除空目录，并且只能删除一个目录
+            对非空目录调用rmdir函数会导致失败
+
+            foreach my $dir (qw(fred barney betty)) {
+                rmdir $dir or warn "Can't rm $dir";
+            }
+
+    修改权限
+        chmod 0755 'fred','barney';
+            chmod会返回成功更改的条目数量
+
+    修改隶属关系
+        my $user = 1004;
+        my $group = 100;
+        chown $user,$group,glob '*.o';
+
+        chown必须给出数字形式的用户标示符和组标示符
+        chown函数会返回受影响的文件数量
+
+        defined(my $user = getpwnam 'lzhang') or die "bad user";
+        defined(my $group = getgrnam 'digital') or die "bad group";
+        chown $user,$group,glob '*.v';
+
+    修改时间戳
+        my $now = time;
+        my $ago = $now - 24 * 60 * 60; #一天的秒数
+        utime $now,$ago,glob '*.v';
+            将最后访问时间改为当前时间，最后修改时间改为一天前
 
 
+
+
+
+
+
+
+
+///////////////////////
+    第14章
+///////////////////////
 
 
 
