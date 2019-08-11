@@ -1330,14 +1330,369 @@ localtime函数
 
 
 ///////////////////////
-    第14章
+    第14章 字符串与排序
 ///////////////////////
 
+用index查找子字符串
+    $where = index($big,$amall);
+        返回$small字符串首次出现的位置，位置从0算起，无法找到返回-1
+        加上第三个参数，表示指定开始搜索的位置
+
+        my $stuff = "Howdy world";
+        my $where1 = index($stuff,"w"); #返回2
+        my $where2 = index($stuff,"w",$where1 +1); #返回6
+        my $where3 = index($stuff,"w",$where2 +1); #返回-1
+
+    rindex函数会从字符串末尾的地方开始找，它的第三个参数用来限定返回值的上限
+        my $last_slash = rindex("/etc/passwd","/"); # 值为4
+
+用substr操作子字符串
+    my $part = substr($sting,$initial_position,$length);
+        第一个参数是要操作的字符串
+        第二个参数是从0算起的其实位置
+        第三个参数是操作的长度
+        第四个参数是要替换的字符串
+        省略第三个参数，会取到字符串的结尾
+        起始位置可以为负值，-1代表从最后一个字符
+
+        my $mineral = substr("fred j. flintstone",8,5); # 返回flint
+        my $rock = substr("fred j. flintstone",13); # 返回stone
+        my $rock = substr("fred j. flintstone",-3,2); # 返回on
+
+        my $string = "Hello World!";
+        substr($string,0,5) = "Goodbye"; # $string变为"Goodbye World!"
+        my $value = substr($string,0,5,"Goodbye"); # $value为"Goodbye World!"
+
+用sprintf格式化字符串
+    my $date_tag = sprintf "%4d/%02d/%02d %2d:%02d:%02d",$yr,$mo,$da,$h,$m,$s;
+        格式化定义中数字字段的前置0表示必要时会在数字前补0以符合指定的宽度要求
+
+用sprintf格式化金额数字
+    sub big_money {
+        my $number = sprintf "%2d",shift @_;
+        1 while $number =~ s/^(-?\d+)(\d\d\d)/$1,$2/;
+        $number =~ s/^(-?)/$1\$/;
+        $number;
+    }
+
+非十进制数字字符串的转换
+    hex('ff'); # 十进制数255
+    hex('0xff'); # 十进制数255
+
+    oct('0377'); #十进制数255
+    oct('377'); #十进制数255
+    oct(‘0xff'); #十进制数255
+    oct(‘0b1101'); #十进制数13
+
+高级排序
+    数字排序
+        my $numbers = sort {$a <=> $b} @some_numbers;
+            以递增的顺序排序
+
+        my $numbers = reverse sort {$a <=> $b} @some_numbers;
+        my $numbers = sort {$b <=> $a} @some_numbers;
+            以递减的顺序排序
+
+    字符串排序
+        my @string = sort {$a comp $b} @any_string;
+
+    按哈希值排序
+        my %score =(
+                    barney  => 195,
+                    fred    => 205,
+                    dino    => 30,
+                    );
+        sub by_score {$score{$b} <=> $score{$a}};
+        my @winners = sort by_score keys %score;
+
+        my @winners = sort {$score{$b} <=> $score{$a}} keys %score;
+
+        按多个键排序
+            sub by_score_and_name{
+                $score{$b} <=> $score{$a}
+                or
+                $a cmp $b
+            }
 
 
 
 
 
+
+
+
+///////////////////////
+    第15章 智能匹配与given-when结构
+///////////////////////
+use 5.010001；#至少是这个版本
+
+智能匹配操作符的优先级
+    范例                            匹配类型
+    %a ~~ %b                        哈希的键值是否一致
+    %a ~~ @b 或 @a ~~ %b            %a中至少一个键在列表@b中
+    %a ~~ /fred/ 或 /fred/ ~~ %a    至少有一个键匹配给定的模式
+    'fred' ~~ %a                    是否存在$a{fred}
+    @a ~~ @b                        数组是否相同
+    @a ~~ /fred/                    @a中至少有一个元素匹配模式
+    $name ~~ undef $name            $name没有定义
+    $name ~~ /fred/                 模式匹配
+    123 ~~ '123.0 '                 数值和numish类型的字符串是否相等
+    'fred'  ~~ 'fred'               字符串是否相等
+    123 ~~ 456                      数值是否相等
+
+given语句
+    given ($ARGV[0]) {
+        when('Fred') {print "name is Fred"}
+        when(/fred/i) {print "name has fred in it"}
+        when(/\AFred/) {print "name stars with Fred"}
+        default {No Fred}
+    }
+
+    given会将参数化名为$_,每个when条件都尝试用只能匹配对$_做测试
+
+    given ($ARGV[0]) {
+        when($_ ~~ 'Fred') {print "name is Fred";continue}
+        when($_ ~~ /fred/i) {print "name has fred in it";continue}
+        when($_ ~~ /\AFred/) {print "name stars with Fred"}
+        default {No Fred}
+    }
+        满足某个条件后，继续测试其他条件
+
+    笨拙匹配
+        given ($ARGV[0]) {
+            when($_ eq 'Fred') {print "name is Fred";continue}
+            when($_ =~ /fred/i) {print "name has fred in it";continue}
+            when($_ =~ /\AFred/) {print "name stars with Fred"}
+            default {No Fred}
+        }
+
+多个条目的when匹配
+    foreach (@names) {
+        print "Processing: $_";
+
+        when($_ eq 'Fred') {print "name is Fred";continue}
+        when($_ =~ /fred/i) {print "name has fred in it";continue}
+        when($_ =~ /\AFred/) {print "name stars with Fred"}
+        default {No Fred}
+    }
+
+
+
+
+
+
+
+
+///////////////////////
+    第16章 进程管理
+///////////////////////
+
+system函数
+    system 'date';
+    system 'ls -l $HOME';
+    system 'commands whith parameters &';
+
+避免使用shell
+    my $tarfile = 'something*wicked.tar';
+    my $dirs    = qw(fred|flintstone <barney&rubble betty);
+    system 'tar','cvf',$tarfile,$dirs
+        将三个目录打包
+
+    system "tar cvf $tarfile $dirs";
+        错误用法
+
+    system的返回值，0表示执行成功，其他表示有问题，和Unix保持一致
+        unless (system 'date') {
+            print "We gave you a date,OK!\n";
+        }
+
+        !system 'rm -rf files_to_delete' or die 'something went wrong';
+
+环境变量
+    $ENV{PATH} = "/home/lzhang/bin:$ENV{PATH}";
+    delete $ENV{IFS};
+    my $make_result = system 'make';
+
+exec函数
+    system函数的所有语法都适用于exec函数
+    ststem函数会创建子进程，子进程会在perl睡眠期间执行任务
+    exec函数导致perl进程自己去执行任务
+    当运行到exec时，Perl会跳进去执行，此后就没有Perl进程了
+    因此，exec调用之后写的代码都无法运行
+    如果启动exec出错的话，后面的语句还是可以运行的
+        exec 'date';
+        die "date coundn't run:$!\n";
+
+    Perl的exec主要功能是为了另一个程序的运行设定运行环境
+        $ENV{PATH} = '/bin:/usr/bin';
+        $ENV{DEBUG} = 1;
+        $ENV{ROCK} = 'granite';
+
+        chdir 'users/fred';
+        open SDTOUT,'>','/tmp/granite.out';
+
+        exec 'bedrock';
+
+用反引号捕获输出结果
+    my $now = `date`;
+    print "The time is now: $now";
+
+    除了反引号，也可以用一般化引起操作符qx()
+        foreach (@functions) {
+            $about{$_} = qx(perldoc -t -f $_);
+        }
+
+        qx'echo $$';
+            qx''避免Perl内插变量，$$是shell的变量值
+
+    在列表上下文中使用反引号
+        如果是在列表上下文中使用反引号，则会返回输出字符串按行拆分的列表
+
+        my $who_txt = `who`;
+        my @who_lines = split /\n/,$who_txt;
+
+        my @who_lines = `who`;
+
+        foreach (`who`) {
+        }
+
+用IPC::System::Simple执行外部进程
+    IPC::System::Simple不是Perl自带的模块，需要自己安装下载
+
+    use IPC::System::Simple qw(system);
+    system 'tar','cvf',$tarfile,$dirs;
+
+    systemx 'tar','cvf',$tarfile,$dirs;
+        还提供了systemx函数，在执行外部命令时，不会调用shell
+
+    需要捕获外部命令的输出，把system和systemx改成capture和capturex
+        my $output = capture 'tar','cvf',$tarfile,$dirs;
+
+通过文件句柄执行外部程序
+    open my $date_fh,'-|','date' or die "Can't pipe from date: $!";
+    open my $mail_fh,'|-','mail merlyn' or die "Can't pipe to mail: $!";
+    open my $mail_fh,'|-','mail','merlyn' or die "Can't pipe to mail: $!";
+        如果需要读取的文件句柄，就用-|
+        如果需要写入的文件句柄，就用|-
+
+    close $mail_fh;
+
+    open my $find_fh,'-|','find',qw(-atime +90 -size +1000 -print) or die "fork:$!";
+    while(<$find_fh>) {
+        chomp;
+        printf "%s size %dK last access $.2f days ago\n",$_,(1023 + -s $_)/1024,-A $_;
+    }
+        每找到一个文件，就会立即输出，如果用反引号的话，就必须要等find执行完之后，才能输出
+
+发送以及接收信号
+    kill 2,4201 or die "Can't signal 4201 with SIGINT: $!"
+        kill是发送信号的命令
+        2是要发送的信号，也可以用INT代替2
+        4201是进程号
+
+    unless(kill 0,$pid) {
+        warn "$pid has gone away!";
+    }
+        判断某个进程是否任然存活
+        编号0的特殊信号的意思是：看看能否向她发送信号，但并不是要真的发送
+
+
+    my $tmp_dir = "/tmp/myprog.$$";
+    mkdir $tmpdir,0700 or die "Can't create $tmpdir: $!";
+
+    sub clean_up {
+        unlink glob "$tmp_dir/*";
+        rmdir $tmp_dir;
+    }
+
+    $SIG{'INT'} = 'clean_up';
+
+
+
+
+
+///////////////////////
+    第17章 Perl 高级技巧
+///////////////////////
+
+列表切片
+    my $mtime= (stat $some_file)[9];
+    my ($card_num,$count) = (split /:/)[1,5];
+    my ($first,$last) = (sort @names)[0,-1];
+    my @numbers = (@names)[0,4,2,0,1];
+
+数组切片
+    my @numbers = @names[0,4,2,0,1];
+    print "Bedrock @names[2,4,0]\n";
+    @items[2,3] = ($new_address,$new_phone);
+
+
+哈希切片
+    my @three_scores = @score{qw/ barney fred dino /};
+
+    my @players = qw(barney fred dino);
+    my $bowling_scores = (195,205,30);
+    @score{@players} = @bowling_scores;
+
+捕获错误
+    用eval
+        当eval捕获到了错误时，停下来的只是这个语句块，整个程序不会崩溃
+        eval的返回值是语句块最后一条表达式的结果，和子程序相同
+        如果eval捕获到了错误，整个语句块会返回undef
+        并且在特殊变量$@中设置错误信息
+        如果没有捕获到错误，$@就是空的
+        eval {$barney = $fred / $dino};
+
+        unless(eval {$fred / $dino}) {
+            print "Can't divide : $@" if $@;
+        }
+
+        unless(eval {&some_sub();1}) {
+            print "Can't divide : $@" if $@;
+        }
+            给eval指定一个返回值
+
+        在列表上下文中，eval捕获到错误会返回空列表
+
+autodie
+    从Perl 5.10.1开始，自带的autodie编译指令负责自动抛出异常
+    autodie会对处理文件、文件句柄、进程间通信和套接字的函数自动施行监管
+        use autodie;
+
+    可以自行指定需要施行autodie监管的操作符
+        use autodie qw(open system :socket);
+
+    当autodie抛出错误时，它会把一个autodie::exception对象放到$@中
+        use 5.010;
+        open my $fh,'>',$filename;
+        given($@) {
+            when(undef) {say "No error"}
+            when('open') {say "Error from open"}
+            when(':io') {say "Non-open,IO error"}
+            when(':all') {say "All other autodie errors"}
+            default {say "Not an autodie error at all"}
+        }
+
+用grep筛选列表
+    foreach (1..100) {
+        push @odd_num,$_ if $_ / 2;
+    }
+
+    $odd_num = grep {$_ / 2} 1..100;
+    my @match_lines = grep {/\bgrep\b/i} <$fh>;
+
+
+    在标量上下文中，返回的是过滤符合条件的元素个数
+        my $line_cnt = grep /\bfred\b/i,<fh>;
+
+用map把列表元素变形
+    foreeach (@data) {
+        push @formatted_data,&big_money($_);
+    }
+
+    my @formatted_data = map {&big_money($_)} @data;
+
+    print "The money numbers are:\n",map {sprintf("%25s\n",$big_money($_))} @data;
 
 
 
