@@ -1694,6 +1694,35 @@ autodie
 
     print "The money numbers are:\n",map {sprintf("%25s\n",$big_money($_))} @data;
 
+更花哨的列表工具
+    List::Util模块包含在标准库中
+
+        my $first_match;
+        foreach (@characters) {
+            if(/\bfred\b/i) {
+                $first_match = $_;
+                last;
+            }
+        }
+
+        use List::Util qw(first);
+        my $first_match = first {/\bfred\b/i} @characters;
+            上面两块代码实现的功能一样
+
+        use List::Util qw(sum);
+        my $total = sum(1..100); #得到总和5050
+
+        use List::Util qw(max);
+        my $max = max(3,5,10,4,6); #得到最大值
+
+        max只能处理数字，要处理字符串的话，使用maxstr
+            use List::Util qw(maxstr);
+            my $max = maxstr(@strings);
+
+        use List::Util qw(shuffle);
+        my @shuffled = shuffle(1..100);
+            使列表元素的排序随机
+
 
 
 
