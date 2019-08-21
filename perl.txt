@@ -1,4 +1,8 @@
 
+##############################################################
+    Perl 语言入门
+##############################################################
+
 use diagnostics
     编译报告更为详尽的问题描述
 
@@ -15,7 +19,7 @@ $_
 
 
 ///////////////////////
-    第2章
+    第2章 标量数据
 ///////////////////////
 
 perl -v
@@ -149,7 +153,7 @@ $madonna = undef;
 
 
 ///////////////////////
-    第3章
+    第3章 列表与数组
 ///////////////////////
 
 $fred[0] = "zhang";
@@ -288,7 +292,7 @@ chomp(@line = <STDIN>);
 
 
 ///////////////////////
-    第4章
+    第4章 子程序
 ///////////////////////
 
 如果定义了两个重名的子程序，后面的子程序会覆盖前面的那个
@@ -321,7 +325,7 @@ my不加括号时，只能用来声明单个词法变量
 
 
 ///////////////////////
-    第5章
+    第5章 输入与输出
 ///////////////////////
 
 读取标准输入
@@ -1724,6 +1728,72 @@ autodie
             使列表元素的排序随机
 
 
+
+
+
+##############################################################
+    Perl 进阶
+##############################################################
+
+
+
+///////////////////////
+    第2章 使用模块
+///////////////////////
+
+2.4 功能接口
+    use File::Basename qw(fileparse basename);
+        在模块名之后指定一个子例程，也称为导入列表
+
+    my $dirname = File::Basename::dirname($some_path);
+        为了保护我们自己的同名dirname例程，可以使用完整包的规范写法
+
+    use File::Basename qw();
+    my $base = File::Basename::basename($some_path);
+        导入空列表的意思是请不要导入任何子例程
+        而没有列表的意思是请导入默认的子例程
+
+2.5 面向对象的接口
+    use File::Spec;
+    my $filespec = File::Spec->catfile($homedir{gilligan},'web_docs','photos','USS_Minnow.gif');
+        模块有一个面向对象的接口，所以它不导入任何子例程
+
+    Math::BigInt
+        use Math::BigInt;
+        my $value = Math::BigInt->new(2); # start with 2
+        $value->bpow(1000);               # take 2**1000
+        print $value->bstr,"\n";          # print it out
+
+    Spreadsheet::WriteExcel
+        use Spreadsheet::WriteExcel;
+        # create a new Excel workbook
+        my $workbook = Spreadsheet::WriteExcel->new('perl.xls');
+        # add a worksheet
+        my $worksheet = $workbook->add_worksheet();
+
+        $worksheet->write('A1','hello world');  # in Excel's A1 cell
+        $worksheet->write(0,0,'hello world');   # in Excel's A1 cell
+
+        # 创建一个表单格式
+        my $red_background = $work_book->add_format(
+                            color => 'white',
+                            bg_color => 'red',
+                            bold => 1,
+                            );
+
+        my $bold = $work_book->add_format(
+                            bold => 1,
+                            );
+
+        $worksheet->write('A2','hello world',$red_background);  # in Excel's A2 cell
+        $worksheet->write('A3','hello world',$bold);  # in Excel's A3 cell
+
+        my $pro_code = "0123";
+        $worksheet->write_string('A4',$pro_code);
+
+        $worksheet->write('A5',4);
+        $worksheet->write('A6',8);
+        $worksheet->write('A7','=A5 + A6');
 
 
 
